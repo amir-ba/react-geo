@@ -10,7 +10,7 @@ import isFunction from 'lodash/isFunction.js';
 import './ToggleButton.less';
 
 import { CSS_PREFIX } from '../../constants';
-
+import { isEqual } from 'lodash';
 /**
  * The ToggleButton.
  *
@@ -55,7 +55,7 @@ class ToggleButton extends React.Component {
   static defaultProps = {
     type: 'primary',
     icon: '',
-    pressed: false
+    checked: false
   }
 
   /**
@@ -72,19 +72,7 @@ class ToggleButton extends React.Component {
    * @param {Object} nextProps The next properties.
    * @param {Object} prevState The previous state.
    */
-  static getDerivedStateFromProps(nextProps, prevState) {
 
-    // Checks to see if the pressed property has changed
-    if (prevState.pressed !== nextProps.pressed) {
-      return {
-        pressed: nextProps.pressed,
-        overallPressed: nextProps.pressed,
-        isClicked: false,
-        lastClickEvt: null
-      };
-    }
-    return null;
-  }
 
   /**
    * Creates the ToggleButton.
@@ -97,7 +85,7 @@ class ToggleButton extends React.Component {
     // Instantiate the state.
     // components state
     this.state = {
-      pressed: props.pressed,
+      checked: props.checked || false,
       lastClickEvt: null,
       overallPressed: props.pressed,
       isClicked: false
@@ -111,13 +99,13 @@ class ToggleButton extends React.Component {
    * state correctly (e.g. activating ol.Controls)
    */
   componentDidMount() {
-    if (this.props.onToggle && this.props.pressed === true) {
+    if (this.props.onToggle && this.props.checked === true) {
       this.props.onToggle(true, null);
     }
   }
 
   /**
-   * Invoked immediately after updating occurs. This method is not called 
+   * Invoked immediately after updating occurs. This method is not called
    * for the initial render.
    * @method
    */
@@ -144,28 +132,12 @@ class ToggleButton extends React.Component {
      *        |__ NO: check if previous update action was a click
      *                |__ YES: ==> run the Toggle function fo the prop value
      */
-    let shouldToggle;
-    if (isClicked || prevState.pressed !== pressed || prevState.isClicked) {
-      if (isClicked) {
-        // button is clicked
-        shouldToggle = true;
-      } else {
-        // check for prop change
-        if (pressed !== prevState.overallPressed) {
-          // pressed prop has changed
-          shouldToggle = true;
-        } else {
-          if (prevState.isClicked) {
-            // prop has not changed but the previous was click event
-            if (prevState.overallPressed !== overallPressed) {
-              shouldToggle = true;
-            }
-          }
-        }
-      }
-      if (shouldToggle && onToggle) {
-        onToggle(overallPressed, lastClickEvt);
-      }
+
+    if (this.props && prevProps
+      && !isEqual(this.props,prevProps)
+      && this.props.checked !== prevProps.checked) {
+      console.log('-----update MEEEE')
+      this.onClick(null);
     }
   }
 
@@ -175,21 +147,11 @@ class ToggleButton extends React.Component {
    * @param {ClickEvent} evt The ClickEvent.
    * @method
    */
-  onClick(evt) {
+  onClick = (evt) => {
     this.setState({
-      overallPressed: !this.state.overallPressed,
-      lastClickEvt: evt,
-      isClicked: true
-    }, () => {
-      // This part can be removed in future if the ToggleGroup button is removed.
-      if (this.context.toggleGroup && isFunction(this.context.toggleGroup.onChange)) {
-        this.context.toggleGroup.onChange(this.props);
-        // this allows for the allowDeselect property to be taken into account
-        // when used with ToggleGroup. Since the ToggleGroup changes the
-        // pressed prop for its child components the click event dose not need to
-        // change the pressed property.
-        this.setState({overallPressed: !this.state.overallPressed});
-      }
+      checked: !this.state.checked
+    },() => {
+      if (this.props.onToggle)   this.props.onToggle(this.state.checked,evt)
     });
   }
 
@@ -206,6 +168,7 @@ class ToggleButton extends React.Component {
       pressed,
       onToggle,
       tooltip,
+      checked,
       tooltipPlacement,
       ...antBtnProps
     } = this.props;
@@ -221,27 +184,31 @@ class ToggleButton extends React.Component {
 
     let iconName = icon;
     let pressedClass = '';
-    if (this.state.overallPressed) {
+    const finalButtonName = 'button'
+    if (this.state.checked) {
       iconName = pressedIcon || icon;
-      pressedClass = ` ${this.pressedClass} `;
     }
     return (
-      <Tooltip
-        title={tooltip}
-        placement={tooltipPlacement}
-      >
-        <Button
-          className={`${finalClassName}${pressedClass}`}
-          onClick={this.onClick.bind(this)}
-          {...filteredAntBtnProps}
-        >
-          <Icon
-            name={iconName}
-            className={fontIcon}
+      // <Button>
+      <label>
+          <input
+            onChange={ this.onClick}
+            name={finalButtonName}
+            type={'checkbox'}
+            checked={this.state.checked || false}
           />
-          {antBtnProps.children}
-        </Button>
-      </Tooltip>
+
+          <div
+            className={`button `}
+          >
+                 {/* {antBtnProps.children} */}
+            <Icon
+              name={iconName}
+              className={fontIcon}
+            />
+          </div>
+
+        </label>
     );
   }
 }

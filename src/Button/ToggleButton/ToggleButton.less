@@ -25,3 +25,17 @@ button.react-geo-togglebutton {
     border-color: darken(@primary-color, 25);
   }
 }
+.button {
+  width: 100%;
+}
+input:checked + .button {
+  background-color: #2196F3;
+}
+input:not(:checked) + .button {
+  background-color: green;
+}
+
+input:focus + .button {
+  box-shadow: 0 0 1px #2196F3;
+}
+// input {display:none;}

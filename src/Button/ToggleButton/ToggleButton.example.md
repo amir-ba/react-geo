@@ -12,8 +12,8 @@ A ToggleButton initially pressed:
 
 ```jsx
 <ToggleButton
-  pressed={true}
-  onToggle={()=>{}}
+  checked={true}
+  onToggle={()=>{console.log(121)}}
 />
 ```
 
